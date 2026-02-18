@@ -37,6 +37,7 @@ ui <- page_fillable(
   # prevent elements from taking up full space of screen vertically
   fillable_mobile = FALSE,
 
+  img(src = "https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png"),
   actionButton(
     inputId = "open_picker",
     label = span(
