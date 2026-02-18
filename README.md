@@ -6,3 +6,4 @@
 
 The goal of azmet-mobile is to create a mobile-first Shiny app for displaying "real-time" weather data from AZMet stations.
 
+The theme is controlled by a _brand.yml file.  Read more about _brand.yml here: https://posit-dev.github.io/brand-yml/.

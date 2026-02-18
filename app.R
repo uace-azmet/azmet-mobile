@@ -3,22 +3,40 @@ library(bslib)
 library(bsicons)
 library(azmetr)
 library(brand.yml)
+library(dplyr)
 
 # azmet <- az_15min()
 
 #' TODO:
 #' - Make default station selected on startup
-#' - use location select input module
-#' - add sparklines to value boxes and make them expandable
-#' - PWA stuff
-#' - cookies
+#' - Use cookie to remember last station choice
+#' - Get rid of "dismiss" button from modal and instead close upon choosing a
+#'   station (or touching outside of modal)
+#' - Maybe don't use a modal at all?  (put select input directly above value boxes)
+#' - Add sparkline type plots to value boxes
+#' - Make value boxes expandable with more detailed visualization
+#' - Make into a PWA
+#' - Add refresh button or swipe down to refresh data
 
+# station_info
+# station_choices <- station_info$meta_station_id
+# names(station_choices) <- station_info$meta_station_name
 
-station_info
-station_choices <- station_info$meta_station_id
-names(station_choices) <- station_info$meta_station_name
-ui <- page_fluid(
+station_choices <- azmetr::station_info |>
+  select(
+    choice = meta_station_name,
+    value = meta_station_id,
+    lat = latitude,
+    lon = longitude
+  ) |>
+  filter(choice != "Test") |>
+  arrange(choice)
+
+ui <- page_fillable(
   theme = bs_theme(brand = "_brand.yml"),
+  # prevent elements from taking up full space of screen vertically
+  fillable_mobile = FALSE,
+
   actionButton(
     inputId = "open_picker",
     label = span(
@@ -46,17 +64,22 @@ server <- function(input, output, session) {
   observeEvent(input$open_picker, {
     showModal(modalDialog(
       title = "Choose a station",
-      selectInput(
-        "station",
-        "Station",
-        choices = station_choices,
+      location_select_ui(
+        "loc_module",
+        "Select a station:",
+        station_choices,
         selected = "az01"
       )
     ))
   })
 
+  selected_location <- location_select_server(
+    "loc_module",
+    station_choices
+  )
+
   output$selected_station <- renderText({
-    names(station_choices[station_choices == input$station])
+    station_choices |> filter(value == selected_location()) |> pull(choice)
   })
 }
 
