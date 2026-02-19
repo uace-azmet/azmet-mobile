@@ -62,6 +62,7 @@ ui <- page_fillable(
 )
 
 server <- function(input, output, session) {
+  # station_id_choice1 <- reactiveVal("az01")
   observeEvent(input$open_picker, {
     showModal(modalDialog(
       title = "Choose a station",
@@ -69,18 +70,25 @@ server <- function(input, output, session) {
         "loc_module",
         "Select a station:",
         station_choices,
-        selected = "az01"
+        # selected = station_id_choice1()
+        selected = station_id_choice()
       )
     ))
   })
 
-  selected_location <- location_select_server(
+  station_id_choice <- location_select_server(
     "loc_module",
     station_choices
   )
 
+  # reactive({
+  #   req(station_id_choice())
+  #   station_id_choice1 <- station_id_choice
+  # })
+
   output$selected_station <- renderText({
-    station_choices |> filter(value == selected_location()) |> pull(choice)
+    # station_choices$choice[station_choices$value == station_id_choice1()]
+    station_choices$choice[station_choices$value == station_id_choice()]
   })
 }
 
