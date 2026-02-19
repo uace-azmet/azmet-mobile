@@ -40,7 +40,7 @@ location_select_ui <- function(
       # style = "flex-grow: 1;", #let the drop-down grow to take up the whole space
       style = "flex-basis: 20rem;", #let the drop-down grow to a max of 20rem
       selectInput(
-        ns("location"),
+        ns("select"),
         label,
         choices = choices,
         selected = selected
@@ -49,7 +49,7 @@ location_select_ui <- function(
     div(
       style = "padding-top: 15px;", # centers the button with the drop-down (roughly)
       geoloc::button_geoloc(
-        ns("user_location"),
+        ns("loc"),
         icon("location-dot"),
         class = "btn btn-sm"
       )
@@ -65,10 +65,10 @@ location_select_server <- function(id, locations_df) {
   moduleServer(id, function(input, output, session) {
     # Update choice when location is received
     observe({
-      req(input$user_location_lat, input$user_location_lon)
+      req(input$loc_lat, input$loc_lon)
 
-      user_lat <- as.numeric(input$user_location_lat)
-      user_lon <- as.numeric(input$user_location_lon)
+      user_lat <- as.numeric(input$loc_lat)
+      user_lon <- as.numeric(input$loc_lon)
 
       # Find nearest location using Haversine distance
       distances <- sapply(1:nrow(locations_df), function(i) {
@@ -90,18 +90,18 @@ location_select_server <- function(id, locations_df) {
       # Update the input
       updateSelectInput(
         session,
-        "location",
+        "select",
         selected = nearest_location$value
       )
     }) |>
       # run when the location is updated (not just when the button is pressed)
       bindEvent(
-        input$user_location_lat,
-        input$user_location_lon,
-        input$user_location
+        input$loc_lat,
+        input$loc_lon,
+        input$loc
       )
 
     # # Return the selected value as a reactive
-    reactive(input$location)
+    reactive(input$select)
   })
 }
