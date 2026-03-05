@@ -13,41 +13,37 @@ library(dplyr)
 #'   and `lon`.
 #' @param selected passed to [shiny::selectInput()]; once of the `value`
 #'   options in `locations_df`.
+#' @param ... additional, arguments passed to [shiny::selectInput()].
 location_select_ui <- function(
   id,
   label = "Select Location:",
   locations_df,
-  selected = NULL
+  selected = NULL,
+  ...
 ) {
   ns <- NS(id)
 
   # Create named vector for choices
   # The value will be "lat,lon" and the name will be the choice
   choices <- setNames(
-    # paste0(locations_df$lat, ",", locations_df$lon),
     locations_df$value,
     locations_df$choice
   )
 
   div(
-    style = "
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 5px;
-    ",
+    class = "d-flex flex-row justify-content-center align-items-center align-middle",
     div(
-      # style = "flex-grow: 1;", #let the drop-down grow to take up the whole space
-      style = "flex-basis: 20rem;", #let the drop-down grow to a max of 20rem
+      class = "p-1",
       selectInput(
         ns("select"),
         label,
         choices = choices,
-        selected = selected
+        selected = selected,
+        ...
       )
     ),
     div(
-      style = "padding-top: 15px;", # centers the button with the drop-down (roughly)
+      class = "pt-3", # centers the button with the drop-down (roughly)
       geoloc::button_geoloc(
         ns("loc"),
         icon("location-dot"),
