@@ -1,26 +1,22 @@
 library(shiny)
 library(bslib)
 library(bsicons)
+library(thematic)
+thematic_shiny()
+
 library(azmetr)
-library(brand.yml)
 library(dplyr)
+library(ggplot2)
+library(lubridate)
 
-# azmet <- az_15min()
 
-#' TODO:
-#' - Make default station selected on startup
-#' - Use cookie to remember last station choice
-#' - Get rid of "dismiss" button from modal and instead close upon choosing a
-#'   station (or touching outside of modal)
-#' - Maybe don't use a modal at all?  (put select input directly above value boxes)
-#' - Add sparkline type plots to value boxes
-#' - Make value boxes expandable with more detailed visualization
-#' - Make into a PWA
-#' - Add refresh button or swipe down to refresh data
+# For now just get data for all sites on app load
+data <- az_15min(start = now() - hours(6), end = now())
 
-# station_info
-# station_choices <- station_info$meta_station_id
-# names(station_choices) <- station_info$meta_station_name
+df <- tibble(
+  hour = floor_date(now(), "hour") - hours(5:0),
+  temp = 60 + runif(6, -5, 5)
+)
 
 station_choices <- azmetr::station_info |>
   select(
@@ -33,63 +29,116 @@ station_choices <- azmetr::station_info |>
   arrange(choice)
 
 ui <- page_fillable(
-  theme = bs_theme(brand = "_brand.yml"),
+  theme = bs_theme(),
+  padding = "10px",
   # prevent elements from taking up full space of screen vertically
   fillable_mobile = FALSE,
-
-  img(src = "https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png"),
+  fillable = FALSE,
+  # Logo
+  img(
+    src = "https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png",
+    width = "300px"
+  ),
+  # TODO: maybe location selector goes at the bottom of the screen?
+  # Location selector
   actionButton(
-    inputId = "open_picker",
+    inputId = "open",
     label = span(
       bs_icon("geo-alt"),
       textOutput("selected_station", container = span)
     ),
-    class = "btn-outline-secondary btn-sm"
+    class = "btn-primary btn-m"
   ),
-  value_box(
-    "Current Temperature",
-    value = "64ºF",
-    showcase = bs_icon("thermometer"),
-    theme = "primary"
-  ),
-
-  value_box(
-    "Precipitation",
-    value = '0"',
-    showcase = bs_icon("cloud"),
-    theme = "primary"
+  # Temperature card
+  card(
+    full_screen = TRUE,
+    id = "temp_card",
+    card_header(
+      class = "bg-primary text-white",
+      div(
+        style = "font-size: 1.1rem; font-weight: 500;",
+        "🌡️ Temperature"
+      )
+    ),
+    card_body(
+      class = "bg-light text-center p-2",
+      div(
+        style = "font-size: 3rem; font-weight: 300;",
+        textOutput("temp_current", inline = TRUE)
+      ),
+      conditionalPanel(
+        condition = "input.temp_card_full_screen",
+        plotOutput("temp_plot")
+      )
+    )
   )
+  # # Temperature as value box
+  # value_box(
+  #   id = "temp_card",
+  #   title = "Current Temperature",
+  #   value = textOutput("temp_current", inline = TRUE),
+  #   showcase = bs_icon("thermometer"),
+  #   showcase_layout = showcase_left_center(),
+  #   conditionalPanel(
+  #     condition = "input.temp_card_full_screen",
+  #     plotOutput("temp_plot")
+  #   ),
+  #   theme = "primary",
+  #   full_screen = TRUE
+  # )
 )
 
 server <- function(input, output, session) {
-  # station_id_choice1 <- reactiveVal("az01")
-  observeEvent(input$open_picker, {
+  # Set a default station
+  # TODO: use cookies for this
+  station <- reactiveVal("az01")
+
+  # Create modal to contain picker with location button
+  observeEvent(input$open, {
     showModal(modalDialog(
-      title = "Choose a station",
       location_select_ui(
         "loc_module",
         "Select a station:",
         station_choices,
-        # selected = station_id_choice1()
-        selected = station_id_choice()
+        selected = station()
       )
     ))
   })
 
+  # Get results of location selection
   station_id_choice <- location_select_server(
     "loc_module",
     station_choices
   )
 
-  # reactive({
-  #   req(station_id_choice())
-  #   station_id_choice1 <- station_id_choice
-  # })
+  # When a choice is made, update the default station
+  observeEvent(station_id_choice(), {
+    station(isolate(station_id_choice()))
+  })
 
+  # Print the station name for the modal button.
   output$selected_station <- renderText({
-    # station_choices$choice[station_choices$value == station_id_choice1()]
-    station_choices$choice[station_choices$value == station_id_choice()]
+    station_choices |> filter(value == station()) |> pull(choice)
+  })
+
+  station_data <- reactive({
+    data |> filter(meta_station_id == station())
+  })
+
+  # Temperature outputs (both regular and fullscreen)
+  output$temp_current <- renderText({
+    paste0(station_data() |> slice_tail(n = 1) |> pull(temp_airC), "°C")
+  })
+
+  output$temp_plot <- renderPlot({
+    p <- ggplot(station_data(), aes(x = datetime, y = temp_airC)) +
+      geom_line(linewidth = 1.5) +
+      geom_point(size = 3) +
+      scale_y_continuous(labels = \(x) paste(x, "ºC")) +
+      scale_x_datetime(date_breaks = "hours", date_labels = "%I:%M %p") +
+      theme(axis.title = element_blank())
+    plot(p)
   })
 }
 
-shinyApp(ui, server)
+shinyApp(ui = ui, server = server)

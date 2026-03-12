@@ -30,7 +30,7 @@ color:
     mesa: "#A95C42"
 
   foreground: black
-  background: warm-gray
+  background: white
   primary: azurite
   secondary: chili
   success: leaf
