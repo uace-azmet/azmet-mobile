@@ -47,7 +47,7 @@ ui <- page_fillable(
       bs_icon("geo-alt"),
       textOutput("selected_station", container = span)
     ),
-    class = "btn-primary btn-sm"
+    class = "btn-primary btn-m"
   ),
   # Temperature card
   card(
@@ -72,6 +72,20 @@ ui <- page_fillable(
       )
     )
   )
+  # # Temperature as value box
+  # value_box(
+  #   id = "temp_card",
+  #   title = "Current Temperature",
+  #   value = textOutput("temp_current", inline = TRUE),
+  #   showcase = bs_icon("thermometer"),
+  #   showcase_layout = showcase_left_center(),
+  #   conditionalPanel(
+  #     condition = "input.temp_card_full_screen",
+  #     plotOutput("temp_plot")
+  #   ),
+  #   theme = "primary",
+  #   full_screen = TRUE
+  # )
 )
 
 server <- function(input, output, session) {
