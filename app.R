@@ -1,5 +1,6 @@
 library(shiny)
 library(bslib)
+library(bsicons)
 library(thematic)
 thematic_shiny()
 
@@ -31,25 +32,33 @@ ui <- page_fillable(
   fillable_mobile = FALSE,
   fillable = FALSE,
   # Title and location selector
-  div(
-    class = "d-flex justify-content-between align-items-center",
-    style = "background-color: white; padding: 1rem; border-radius: 0.25rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);",
-    layout_columns(
-      col_widths = c(7, 5),
+  # div(
+  #   class = "d-flex justify-content-between align-items-center",
+  #   style = "background-color: white; padding: 1rem; border-radius: 0.25rem; box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);",
+  #   layout_columns(
+  #     col_widths = c(7, 5),
 
-      img(
-        src = "https://azmet.arizona.edu/sites/default/files/AZMet_1.png",
-        width = "50%"
-      ),
-      location_select_ui(
-        "loc_module",
-        "Select a station:",
-        station_choices,
-        selected = "az01"
-      )
-    )
+  #     img(
+  #       src = "https://azmet.arizona.edu/sites/default/files/AZMet_1.png",
+  #       width = "50%"
+  #     ),
+  #     location_select_ui(
+  #       "loc_module",
+  #       "Select a station:",
+  #       station_choices,
+  #       selected = "az01"
+  #     )
+  #   )
+  # ),
+  img(src = "https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png"),
+  actionButton(
+    inputId = "open",
+    label = span(
+      bs_icon("geo-alt"),
+      textOutput("selected_station", container = span)
+    ),
+    class = "btn-outline-secondary btn-sm"
   ),
-
   # Temperature card
   card(
     full_screen = TRUE,
@@ -77,14 +86,42 @@ ui <- page_fillable(
         plotOutput("temp_plot")
       )
     )
-  )
+  ),
+  verbatimTextOutput("input_text")
 )
 
 server <- function(input, output, session) {
+  # Set a default station
+  # TODO: use cookies for this
+  station <- reactiveVal("az01")
+
+  # Create modal to contain picker with location button
+  observeEvent(input$open, {
+    showModal(modalDialog(
+      location_select_ui(
+        "loc_module",
+        "Select a station:",
+        station_choices,
+        selected = station()
+      )
+    ))
+  })
+
+  # Get results of location selection
   station_id_choice <- location_select_server(
     "loc_module",
     station_choices
   )
+
+  # When a choice is made, update the default station
+  observeEvent(station_id_choice(), {
+    station(isolate(station_id_choice()))
+  })
+
+  # Print the station name for the modal button.
+  output$selected_station <- renderText({
+    station_choices |> filter(value == station()) |> pull(choice)
+  })
 
   # Temperature outputs (both regular and fullscreen)
   output$temp_current <- output$temp_current_full <- renderText({
@@ -103,8 +140,16 @@ server <- function(input, output, session) {
       labs(x = "Time", y = "Temperature (°F)")
     plot(p)
   })
-  output$text <- renderText({
-    "hello!"
+  output$input_text <- renderPrint({
+    list(
+      station_id_choice(),
+      station(),
+      input$loc_module,
+      input$loc_module_select,
+      input$loc_module_loc,
+      input$loc_module_loc_lat,
+      input$loc_module_loc_lon
+    )
   })
 }
 

@@ -6,7 +6,7 @@ library(dplyr)
 #'
 #' A select drop-down input with a location button next to it to choose the
 #' input closest to the user (if they have location services allowed).
-#'
+#' 
 #' @param id
 #' @param label passed to [shiny::selectInput()].
 #' @param locations_df a data frame with the columns `choice`, `value`, `lat`,
