@@ -95,14 +95,19 @@ server <- function(input, output, session) {
 
   # Create modal to contain picker with location button
   observeEvent(input$open, {
-    showModal(modalDialog(
-      location_select_ui(
-        "loc_module",
-        "Select a station:",
-        station_choices,
-        selected = station()
+    showModal(
+      # TODO: it would be nice if making a selection closed the modal
+      modalDialog(
+        location_select_ui(
+          "loc_module",
+          "Select a station:",
+          station_choices,
+          selected = station()
+        ),
+        footer = NULL,
+        easyClose = TRUE
       )
-    ))
+    )
   })
 
   # Get results of location selection
