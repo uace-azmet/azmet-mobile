@@ -11,7 +11,7 @@ library(lubridate)
 
 
 # For now just get data for all sites on app load
-data <- az_15min(start = now() - hours(6), end = now())
+data <- az_15min(start = now() - hours(3), end = now())
 
 df <- tibble(
   hour = floor_date(now(), "hour") - hours(5:0),
@@ -62,30 +62,38 @@ ui <- page_fillable(
     ),
     card_body(
       class = "bg-light text-center p-2",
-      div(
+      span(
         style = "font-size: 3rem; font-weight: 300;",
         textOutput("temp_current", inline = TRUE)
       ),
       conditionalPanel(
         condition = "input.temp_card_full_screen",
-        plotOutput("temp_plot")
+        plotOutput("temp_plot", height = "470px")
+      )
+    )
+  ),
+  card(
+    full_screen = TRUE,
+    id = "wind_card",
+    card_header(
+      class = "bg-primary text-white",
+      div(
+        style = "font-size: 1.1rem; font-weight: 500;",
+        "💨 Wind"
+      )
+    ),
+    card_body(
+      class = "bg-light text-center p-2",
+      span(
+        style = "font-size: 3rem; font-weight: 300;",
+        textOutput("wind_current", inline = TRUE)
+      ),
+      conditionalPanel(
+        condition = "input.wind_card_full_screen",
+        plotOutput("wind_plot", height = "470px")
       )
     )
   )
-  # # Temperature as value box
-  # value_box(
-  #   id = "temp_card",
-  #   title = "Current Temperature",
-  #   value = textOutput("temp_current", inline = TRUE),
-  #   showcase = bs_icon("thermometer"),
-  #   showcase_layout = showcase_left_center(),
-  #   conditionalPanel(
-  #     condition = "input.temp_card_full_screen",
-  #     plotOutput("temp_plot")
-  #   ),
-  #   theme = "primary",
-  #   full_screen = TRUE
-  # )
 )
 
 server <- function(input, output, session) {
@@ -143,6 +151,17 @@ server <- function(input, output, session) {
       scale_x_datetime(date_breaks = "hours", date_labels = "%I:%M %p") +
       theme(axis.title = element_blank())
     plot(p)
+  })
+
+  output$wind_current <- renderText({
+    station_data() |>
+      slice_head(n = 1) |>
+      mutate(wind_current = glue::glue("{wind_spd_mps} m/s")) |>
+      pull(wind_current)
+    # TODO: add "out of the NE"
+  })
+  output$wind_plot <- renderPlot({
+    plot_wind(station_data())
   })
 }
 
