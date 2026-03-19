@@ -47,7 +47,7 @@ location_select_ui <- function(
       geoloc::button_geoloc(
         ns("loc"),
         icon("location-dot"),
-        class = "btn-primary btn-sm bg-primary"
+        class = "btn-outline-primary btn-sm"
       )
     )
   )

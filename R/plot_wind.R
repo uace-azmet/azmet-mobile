@@ -18,14 +18,15 @@ plot_wind <- function(data) {
     scale_x_continuous(
       breaks = c(
         "N" = 0,
-        "NE" = 45,
+        # "NE" = 45,
         "E" = 90,
-        "SE" = 135,
+        # "SE" = 135,
         "S" = 180,
-        "SW" = 225,
-        "W" = 270,
-        "NW" = 315
-      )
+        # "SW" = 225,
+        "W" = 270 #,
+        # "NW" = 315
+      ),
+      minor_breaks = c(45, 135, 225, 315)
     ) +
     scale_y_continuous(labels = function(x) paste(x, "m/s")) +
     coord_radial(

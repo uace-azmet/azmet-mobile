@@ -1,22 +1,24 @@
 library(shiny)
 library(bslib)
 library(bsicons)
-library(thematic)
-thematic_shiny()
+
+# for location select module
+# https://github.com/ColinFay/geoloc
+library(geoloc)
 
 library(azmetr)
 library(dplyr)
-library(ggplot2)
 library(lubridate)
+library(ggplot2)
+library(brand.yml)
 
+theme_set(theme(text = element_text(size = 16)))
+
+library(thematic)
+thematic_shiny()
 
 # For now just get data for all sites on app load
 data <- az_15min(start = now() - hours(3), end = now())
-
-df <- tibble(
-  hour = floor_date(now(), "hour") - hours(5:0),
-  temp = 60 + runif(6, -5, 5)
-)
 
 station_choices <- azmetr::station_info |>
   select(
@@ -29,7 +31,7 @@ station_choices <- azmetr::station_info |>
   arrange(choice)
 
 ui <- page_fillable(
-  theme = bs_theme(),
+  theme = bs_theme(brand = "_brand.yml"),
   padding = "10px",
   # prevent elements from taking up full space of screen vertically
   fillable_mobile = FALSE,
@@ -62,13 +64,13 @@ ui <- page_fillable(
     ),
     card_body(
       class = "bg-light text-center p-2",
-      span(
+      p(
         style = "font-size: 3rem; font-weight: 300;",
         textOutput("temp_current", inline = TRUE)
       ),
       conditionalPanel(
         condition = "input.temp_card_full_screen",
-        plotOutput("temp_plot", height = "470px")
+        plotOutput("temp_plot", height = "400px")
       )
     )
   ),
@@ -83,17 +85,25 @@ ui <- page_fillable(
       )
     ),
     card_body(
-      class = "bg-light text-center p-2",
-      span(
-        style = "font-size: 3rem; font-weight: 300;",
-        textOutput("wind_current", inline = TRUE)
+      class = "bg-light text-center",
+      div(
+        p(
+          span(
+            style = "font-size: 3rem; font-weight: 300;",
+            textOutput("wind_current", inline = TRUE)
+          ),
+          span(
+            textOutput("wind_current_dir", inline = TRUE),
+            class = "text-dark"
+          )
+        ),
       ),
       conditionalPanel(
         condition = "input.wind_card_full_screen",
-        plotOutput("wind_plot", height = "470px")
+        plotOutput("wind_plot", height = "400px")
       )
     )
-  )
+  ),
 )
 
 server <- function(input, output, session) {
@@ -158,7 +168,13 @@ server <- function(input, output, session) {
       slice_head(n = 1) |>
       mutate(wind_current = glue::glue("{wind_spd_mps} m/s")) |>
       pull(wind_current)
-    # TODO: add "out of the NE"
+  })
+  output$wind_current_dir <- renderText({
+    dir <- station_data() |>
+      slice_head(n = 1) |>
+      pull(wind_vector_dir) |>
+      degrees_to_cardinal()
+    dir
   })
   output$wind_plot <- renderPlot({
     plot_wind(station_data())
