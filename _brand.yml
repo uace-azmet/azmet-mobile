@@ -1,12 +1,14 @@
 meta:
   name:
-    full: Arizona Metereological Network
+    full: Arizona Meteorological Network
     short: AZMet
   link: 
-    home: https://www.azmet.arizona.edu
+    home: https://azmet.arizona.edu
     guidelines: https://marcom.arizona.edu
 
-logo: https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png
+# logo: https://www.azmet.arizona.edu/sites/default/files/AZMet_1.png
+# logo: www/azmet-logo.png
+
 color:
   palette:
     # primary brand colors
@@ -42,6 +44,8 @@ color:
 
 typography:
   fonts:
+    # - family: proxima-nova, calibri, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, \"Noto Sans\", sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"
+      # source: system # Values must be exactly one of "system", "file", "google", and "bunny".
     - family: Calibri
       source: google
     - family: Fira Mono
